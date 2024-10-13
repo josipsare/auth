@@ -4,9 +4,10 @@ import path from 'path';
 import { sequelize } from './database'; // Adjust the path accordingly
 import User from './models/User';
 import Ticket from "./models/Ticket"; // Import your models
+import {config} from "dotenv";
 
 const app = express();
-
+config()
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 
@@ -35,8 +36,8 @@ app.get('/get', async (req, res) => {
 });
 
 const hostname = '127.0.0.1';
-const port = 4040;
+const port = process.env.PORT;
 
-app.listen(port, hostname, () => {
+app.listen(Number(port), hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
 });
