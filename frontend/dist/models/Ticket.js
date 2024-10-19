@@ -15,6 +15,14 @@ Ticket.init({
         type: sequelize_1.DataTypes.STRING(20),
         allowNull: false,
     },
+    firstName: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: false,
+    },
+    lastName: {
+        type: sequelize_1.DataTypes.STRING,
+        allowNull: true,
+    },
     createdAt: {
         type: sequelize_1.DataTypes.DATE,
         defaultValue: sequelize_1.DataTypes.NOW,

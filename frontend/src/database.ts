@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize';
 import { config } from 'dotenv';
-import { User, Ticket } from './models/initModels'; // Import models via initModels
+import { Ticket } from './models/initModels'; // Import models via initModels
 
 config();
 

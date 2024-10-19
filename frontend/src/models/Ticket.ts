@@ -4,6 +4,8 @@ import { sequelize } from '../database';
 class Ticket extends Model {
     public id!: string;
     public vatin!: string;
+    public firstName!: string;
+    public lastName!: string;
     public createdAt!: Date;
     public updatedAt!: Date;
 }
@@ -19,6 +21,14 @@ Ticket.init(
         vatin: {
             type: DataTypes.STRING(20),
             allowNull: false,
+        },
+        firstName: {
+            type: DataTypes.STRING,
+            allowNull: false,
+        },
+        lastName: {
+            type: DataTypes.STRING,
+            allowNull: true,
         },
         createdAt: {
             type: DataTypes.DATE,
