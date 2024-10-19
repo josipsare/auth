@@ -1,7 +1,12 @@
+//
+//
+// TODO dodati dio oko OIDC logina korisnika
+//
+//
+//https://auth-3-t6fw.onrender.com
 import express, { Request, Response } from 'express';
 import path from 'path';
 import QRCode from 'qrcode';
-import User from './models/User';
 import Ticket from "./models/Ticket"; // Import your models
 import {config} from "dotenv";
 import {makeAuthorizedApiCall} from "./services/apiService";
@@ -79,11 +84,18 @@ app.get('/ticketDetails/:ticketId', async (req: Request<{ ticketId: string }>, r
     try {
         const ticket = await Ticket.findOne({ where: { id: ticketId } });
         // @ts-ignore
-        const user = await User.findOne({where: {vatin: ticket.vatin}})
+
 
         // @ts-ignore
-        const createdAtFormatted = ticket.createdAt.toLocaleTimeString('en-GB', {
-            timeZoneName: 'short'
+        const createdAtFormatted = ticket.createdAt.toLocaleString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            timeZoneName: 'short',
+            hour12: false // Use 24-hour format
         });
 
         if (ticket) {
@@ -92,9 +104,9 @@ app.get('/ticketDetails/:ticketId', async (req: Request<{ ticketId: string }>, r
                 <body>
                     <h1>Details of your ticket</h1>
                     <p>Ticket is registered under:</p>
-                    <p>First Name: ${user ? user.firstName : 'Unknown User'}</p>
-                    <p>Last Name: ${user ? user.lastName : 'Unknown User'}</p>
-                    <p>Vatin: ${user ? user.vatin : 'Unknown User'}</p>
+                    <p>First Name: ${ticket ? ticket.firstName : 'Unknown User'}</p>
+                    <p>Last Name: ${ticket ? ticket.lastName : 'Unknown User'}</p>
+                    <p>Vatin: ${ticket ? ticket.vatin : 'Unknown User'}</p>
                     <p>Ticket was generated at ${createdAtFormatted}</p>
                 </body>
             </html>
@@ -114,7 +126,7 @@ app.get('/generate-qr/:ticketId', async (req, res) => {
     console.log("usli smo na generate qr");
     console.log(ticketId);
 
-    const url = `http://127.0.0.1:10000/ticketDetails/${ticketId}`;
+    const url = `https://auth-3-t6fw.onrender.com:10000/ticketDetails/${ticketId}`;
     //TODO ovo promjenuti da odgovara URLu od rendera
 
     try {
@@ -146,6 +158,8 @@ app.post('/secureTicket', async (req, res) => {
 
     const newTicket = await Ticket.create({
         vatin: req.body.vatin,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
         createdAt: new Date(),
         updatedAt: new Date()
     });
@@ -153,17 +167,6 @@ app.post('/secureTicket', async (req, res) => {
     console.log("Created ticket:", newTicket);
 
     res.json(newTicket);
-});
-
-app.get('/get', async (req, res) => {
-    try {
-        const users = await User.findAll();
-        console.log(users);
-        res.json(users);
-    } catch (err) {
-        console.log(err);
-        res.sendStatus(500);
-    }
 });
 
 app.get('/getToken', async (req, res) => {
@@ -178,7 +181,7 @@ app.get('/getToken', async (req, res) => {
 });
 
 
-const hostname = '127.0.0.1';
+const hostname = '0.0.0.0'; // TODO ovo treba pominiti ako se radi lokalno
 const port = process.env.PORT;
 
 app.listen(Number(port), hostname, () => {

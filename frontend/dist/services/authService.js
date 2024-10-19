@@ -15,6 +15,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.getAuthToken = getAuthToken;
 // authService.ts
 const axios_1 = __importDefault(require("axios"));
+const dotenv_1 = require("dotenv");
+(0, dotenv_1.config)();
 function getAuthToken() {
     return __awaiter(this, void 0, void 0, function* () {
         try {
@@ -23,9 +25,9 @@ function getAuthToken() {
                 url: 'https://dev-uwezclgo7k3pt3iq.us.auth0.com/oauth/token',
                 headers: { 'Content-Type': 'application/json' },
                 data: {
-                    client_id: "ABMLx6mwHRXdIN49V5BqtFQ2xBIF1LLG",
-                    client_secret: "EOsXKT_mjmAxt-Lav7V3lSv0fwVkBbnRmpkGNWdtzxVoUltPQxdCujQ7NTowpjIv",
-                    audience: 'http://127.0.0.1:10000/',
+                    client_id: process.env.CLIENT_ID,
+                    client_secret: process.env.CLIENT_SECRET,
+                    audience: 'http://127.0.0.1:10000/', //TODO ovo ce mozda trebati promjeniti kad se bude deployalo
                     grant_type: 'client_credentials',
                 },
             });

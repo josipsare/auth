@@ -1,6 +1,9 @@
 // authService.ts
 import axios from 'axios';
+import {config} from "dotenv";
 
+
+config()
 export async function getAuthToken(): Promise<string> {
     try {
         const response = await axios({
@@ -8,9 +11,9 @@ export async function getAuthToken(): Promise<string> {
             url: 'https://dev-uwezclgo7k3pt3iq.us.auth0.com/oauth/token',
             headers: { 'Content-Type': 'application/json' },
             data: {
-                client_id: "ABMLx6mwHRXdIN49V5BqtFQ2xBIF1LLG",
-                client_secret: "EOsXKT_mjmAxt-Lav7V3lSv0fwVkBbnRmpkGNWdtzxVoUltPQxdCujQ7NTowpjIv",
-                audience: 'http://127.0.0.1:10000/', //TODO ovo ce mozda trebati promjeniti kad se bude deployalo
+                client_id: process.env.CLIENT_ID,
+                client_secret: process.env.CLIENT_SECRET,
+                audience: 'https://auth-3-t6fw.onrender.com:10000/', //TODO ovo ce mozda trebati promjeniti kad se bude deployalo
                 grant_type: 'client_credentials',
             },
         });

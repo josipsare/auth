@@ -12,10 +12,14 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+//
+//
+// TODO dodati dio oko OIDC logina korisnika
+//
+//
 const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
 const qrcode_1 = __importDefault(require("qrcode"));
-const User_1 = __importDefault(require("./models/User"));
 const Ticket_1 = __importDefault(require("./models/Ticket")); // Import your models
 const dotenv_1 = require("dotenv");
 const apiService_1 = require("./services/apiService");
@@ -45,6 +49,7 @@ app.post('/getTicket', (req, res) => __awaiter(void 0, void 0, void 0, function*
         console.log("Entered getTicket route.");
         console.log("Request body:", req.body);
         const data = req.body;
+        console.log("Checking if user provided all fields");
         if (!data.vatin || !data.firstName || !data.lastName) {
             res.status(400).send('Missing required fields');
             return;
@@ -72,10 +77,16 @@ app.get('/ticketDetails/:ticketId', (req, res) => __awaiter(void 0, void 0, void
     try {
         const ticket = yield Ticket_1.default.findOne({ where: { id: ticketId } });
         // @ts-ignore
-        const user = yield User_1.default.findOne({ where: { vatin: ticket.vatin } });
         // @ts-ignore
-        const createdAtFormatted = ticket.createdAt.toLocaleTimeString('en-GB', {
-            timeZoneName: 'short'
+        const createdAtFormatted = ticket.createdAt.toLocaleString('en-GB', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            timeZoneName: 'short',
+            hour12: false // Use 24-hour format
         });
         if (ticket) {
             res.send(`
@@ -83,9 +94,9 @@ app.get('/ticketDetails/:ticketId', (req, res) => __awaiter(void 0, void 0, void
                 <body>
                     <h1>Details of your ticket</h1>
                     <p>Ticket is registered under:</p>
-                    <p>First Name: ${user ? user.firstName : 'Unknown User'}</p>
-                    <p>Last Name: ${user ? user.lastName : 'Unknown User'}</p>
-                    <p>Vatin: ${user ? user.vatin : 'Unknown User'}</p>
+                    <p>First Name: ${ticket ? ticket.firstName : 'Unknown User'}</p>
+                    <p>Last Name: ${ticket ? ticket.lastName : 'Unknown User'}</p>
+                    <p>Vatin: ${ticket ? ticket.vatin : 'Unknown User'}</p>
                     <p>Ticket was generated at ${createdAtFormatted}</p>
                 </body>
             </html>
@@ -132,22 +143,13 @@ app.post('/secureTicket', (req, res) => __awaiter(void 0, void 0, void 0, functi
     console.log("ovo je req.body as JSON:", JSON.stringify(req.body, null, 2));
     const newTicket = yield Ticket_1.default.create({
         vatin: req.body.vatin,
+        firstName: req.body.firstName,
+        lastName: req.body.lastName,
         createdAt: new Date(),
         updatedAt: new Date()
     });
     console.log("Created ticket:", newTicket);
     res.json(newTicket);
-}));
-app.get('/get', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
-    try {
-        const users = yield User_1.default.findAll();
-        console.log(users);
-        res.json(users);
-    }
-    catch (err) {
-        console.log(err);
-        res.sendStatus(500);
-    }
 }));
 app.get('/getToken', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     try {

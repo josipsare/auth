@@ -15,7 +15,7 @@ export async function makeAuthorizedApiCall(data: any): Promise<any> {
         // Make the API request with the token in the Authorization header
         const response = await axios({
             method: 'POST',
-            url: 'http://127.0.0.1:10000/secureTicket',
+            url: 'https://auth-3-t6fw.onrender.com:10000/secureTicket',
             //TODO ovo ce mozda trebati promjeniti kad se bude deployalo
             headers: {
                 'Content-Type': 'application/json',
