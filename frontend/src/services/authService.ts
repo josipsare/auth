@@ -13,7 +13,7 @@ export async function getAuthToken(): Promise<string> {
             data: {
                 client_id: process.env.CLIENT_ID,
                 client_secret: process.env.CLIENT_SECRET,
-                audience: 'https://auth-3-t6fw.onrender.com:10000/', //TODO ovo ce mozda trebati promjeniti kad se bude deployalo
+                audience: 'https://auth-3-t6fw.onrender.com/', //TODO ovo ce mozda trebati promjeniti kad se bude deployalo
                 grant_type: 'client_credentials',
             },
         });
