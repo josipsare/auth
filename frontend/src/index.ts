@@ -126,7 +126,7 @@ app.get('/generate-qr/:ticketId', async (req, res) => {
     console.log("usli smo na generate qr");
     console.log(ticketId);
 
-    const url = `https://auth-3-t6fw.onrender.com:10000/ticketDetails/${ticketId}`;
+    const url = `https://auth-3-t6fw.onrender.com/ticketDetails/${ticketId}`;
     //TODO ovo promjenuti da odgovara URLu od rendera
 
     try {
