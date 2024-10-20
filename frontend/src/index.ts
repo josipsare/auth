@@ -24,7 +24,7 @@ app.use(express.urlencoded({ extended: true })); // For parsing application/x-ww
 const configg: ConfigParams = {
     authRequired: false, // Autentifikacija nije obavezna na svim rutama
     auth0Logout: false,
-    secret: '9f7b0bbf78bac11d6de1618d0809b6e3d3663b869dbc2c3bce3865fd79db1441',
+    secret: process.env.AUTH_SECRET,
     baseURL: 'https://auth-3-t6fw.onrender.com',
     clientID: 'aEJavypbK5mTDhyFbB4BQ9JMqNasvEcF',
     issuerBaseURL: 'https://dev-uwezclgo7k3pt3iq.us.auth0.com'
