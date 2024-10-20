@@ -11,6 +11,7 @@ import Ticket from "./models/Ticket"; // Import your models
 import {config} from "dotenv";
 import {makeAuthorizedApiCall} from "./services/apiService";
 import {getAuthToken} from "./services/authService";
+import { auth, requiresAuth, ConfigParams } from 'express-openid-connect';
 
 const app = express();
 config()
@@ -20,8 +21,16 @@ app.set('view engine', 'pug');
 app.use(express.json()); // For parsing application/json
 app.use(express.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
 
+const configg: ConfigParams = {
+    authRequired: false, // Autentifikacija nije obavezna na svim rutama
+    auth0Logout: false,
+    secret: process.env.AUTH_SECRET,
+    baseURL: 'https://auth-3-t6fw.onrender.com',
+    clientID: 'aEJavypbK5mTDhyFbB4BQ9JMqNasvEcF',
+    issuerBaseURL: 'https://dev-uwezclgo7k3pt3iq.us.auth0.com'
+};
 
-
+app.use(auth(configg));
 
 app.get('/', async (req:Request, res:Response) => {
     console.log("-------------------------------------");
@@ -43,6 +52,8 @@ interface TicketRequestBody {
     lastName: string;
 }
 
+
+
 app.post('/getTicket', async (req: Request<{}, {}, TicketRequestBody>, res: Response): Promise<void> => {
     try {
         console.log("Entered getTicket route.");
@@ -60,7 +71,7 @@ app.post('/getTicket', async (req: Request<{}, {}, TicketRequestBody>, res: Resp
         const tickets: Ticket[] = await Ticket.findAll({ where: { vatin: data.vatin } });
         console.log("Number of tickets:", tickets.length);
 
-        if (tickets.length > 3) {
+        if (tickets.length >= 3) {
             res.status(400).send("More than 3 tickets were generated under this VATIN.");
             return
         }
@@ -78,7 +89,7 @@ app.post('/getTicket', async (req: Request<{}, {}, TicketRequestBody>, res: Resp
 });
 
 
-app.get('/ticketDetails/:ticketId', async (req: Request<{ ticketId: string }>, res: Response) => {
+app.get('/ticketDetails/:ticketId',requiresAuth(), async (req: Request<{ ticketId: string }>, res: Response) => {
     const ticketId = req.params.ticketId;
 
     try {
@@ -102,6 +113,7 @@ app.get('/ticketDetails/:ticketId', async (req: Request<{ ticketId: string }>, r
             res.send(`
             <html>
                 <body>
+                    <h1>Dobrodošli korisniče: ${req.oidc.user?.name}</h1>
                     <h1>Details of your ticket</h1>
                     <p>Ticket is registered under:</p>
                     <p>First Name: ${ticket ? ticket.firstName : 'Unknown User'}</p>

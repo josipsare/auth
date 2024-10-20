@@ -28,7 +28,7 @@ function makeAuthorizedApiCall(data) {
             // Make the API request with the token in the Authorization header
             const response = yield (0, axios_1.default)({
                 method: 'POST',
-                url: 'http://127.0.0.1:10000/secureTicket',
+                url: 'http://localhost:10000/secureTicket',
                 //TODO ovo ce mozda trebati promjeniti kad se bude deployalo
                 headers: {
                     'Content-Type': 'application/json',
