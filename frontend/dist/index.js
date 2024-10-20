@@ -17,6 +17,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // TODO dodati dio oko OIDC logina korisnika
 //
 //
+//https://auth-3-t6fw.onrender.com
 const express_1 = __importDefault(require("express"));
 const path_1 = __importDefault(require("path"));
 const qrcode_1 = __importDefault(require("qrcode"));
@@ -24,12 +25,22 @@ const Ticket_1 = __importDefault(require("./models/Ticket")); // Import your mod
 const dotenv_1 = require("dotenv");
 const apiService_1 = require("./services/apiService");
 const authService_1 = require("./services/authService");
+const express_openid_connect_1 = require("express-openid-connect");
 const app = (0, express_1.default)();
 (0, dotenv_1.config)();
 app.set('views', path_1.default.join(__dirname, 'views'));
 app.set('view engine', 'pug');
 app.use(express_1.default.json()); // For parsing application/json
 app.use(express_1.default.urlencoded({ extended: true })); // For parsing application/x-www-form-urlencoded
+const configg = {
+    authRequired: false, // Autentifikacija nije obavezna na svim rutama
+    auth0Logout: false,
+    secret: '9f7b0bbf78bac11d6de1618d0809b6e3d3663b869dbc2c3bce3865fd79db1441',
+    baseURL: 'http://localhost:10000',
+    clientID: 'aEJavypbK5mTDhyFbB4BQ9JMqNasvEcF',
+    issuerBaseURL: 'https://dev-uwezclgo7k3pt3iq.us.auth0.com'
+};
+app.use((0, express_openid_connect_1.auth)(configg));
 app.get('/', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     console.log("-------------------------------------");
     console.log("usli smo na index");
@@ -57,7 +68,7 @@ app.post('/getTicket', (req, res) => __awaiter(void 0, void 0, void 0, function*
         console.log("Checking number of generated tickets under this VATIN");
         const tickets = yield Ticket_1.default.findAll({ where: { vatin: data.vatin } });
         console.log("Number of tickets:", tickets.length);
-        if (tickets.length > 3) {
+        if (tickets.length >= 3) {
             res.status(400).send("More than 3 tickets were generated under this VATIN.");
             return;
         }
@@ -72,7 +83,8 @@ app.post('/getTicket', (req, res) => __awaiter(void 0, void 0, void 0, function*
         return;
     }
 }));
-app.get('/ticketDetails/:ticketId', (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+app.get('/ticketDetails/:ticketId', (0, express_openid_connect_1.requiresAuth)(), (req, res) => __awaiter(void 0, void 0, void 0, function* () {
+    var _a;
     const ticketId = req.params.ticketId;
     try {
         const ticket = yield Ticket_1.default.findOne({ where: { id: ticketId } });
@@ -92,6 +104,7 @@ app.get('/ticketDetails/:ticketId', (req, res) => __awaiter(void 0, void 0, void
             res.send(`
             <html>
                 <body>
+                    <h1>Dobrodošli korisniče: ${(_a = req.oidc.user) === null || _a === void 0 ? void 0 : _a.name}</h1>
                     <h1>Details of your ticket</h1>
                     <p>Ticket is registered under:</p>
                     <p>First Name: ${ticket ? ticket.firstName : 'Unknown User'}</p>
@@ -116,7 +129,7 @@ app.get('/generate-qr/:ticketId', (req, res) => __awaiter(void 0, void 0, void 0
     console.log("-------------------------------------");
     console.log("usli smo na generate qr");
     console.log(ticketId);
-    const url = `http://127.0.0.1:10000/ticketDetails/${ticketId}`;
+    const url = `http://localhost:10000/ticketDetails/${ticketId}`;
     //TODO ovo promjenuti da odgovara URLu od rendera
     try {
         const qrCodeImageUrl = yield qrcode_1.default.toDataURL(url);
@@ -162,7 +175,7 @@ app.get('/getToken', (req, res) => __awaiter(void 0, void 0, void 0, function* (
         res.sendStatus(500);
     }
 }));
-const hostname = '127.0.0.1';
+const hostname = 'localhost'; // TODO ovo treba pominiti ako se radi lokalno
 const port = process.env.PORT;
 app.listen(Number(port), hostname, () => {
     console.log(`Server running at http://${hostname}:${port}/`);
