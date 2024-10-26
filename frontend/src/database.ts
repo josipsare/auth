@@ -1,6 +1,6 @@
 import { Sequelize } from 'sequelize';
 import { config } from 'dotenv';
-import { Ticket } from './models/initModels'; // Import models via initModels
+
 
 config();
 
@@ -24,7 +24,6 @@ async function connectToDatabase() {
         await sequelize.authenticate();
         console.log('Database connection successful!');
 
-        // Sync database
         await sequelize.sync();
         console.log('Database synchronized!');
     } catch (err) {

@@ -18,7 +18,7 @@ User.init(
         vatin: {
             type: DataTypes.STRING,
             allowNull: false,
-            unique: true, // Ensure unique constraint
+            unique: true,
         },
         firstName: {
             type: DataTypes.STRING,
