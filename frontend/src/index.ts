@@ -47,6 +47,22 @@ interface TicketRequestBody {
 }
 
 
+async function generateQRCodeHTML(ticketId: string): Promise<string> {
+    const ticketDetailsUrl = `https://auth-3-t6fw.onrender.com/ticketDetails/${ticketId}`;
+    const qrCodeImageUrl = await QRCode.toDataURL(ticketDetailsUrl);
+
+    return `
+        <html>
+            <body>
+                <h1>QR code of your ticket</h1>
+                <img src="${qrCodeImageUrl}" alt="QR Code"/>
+                <p>Scan the QR code to access your ticket information.</p>
+                <a href="/">Home</a>
+            </body>
+        </html>
+    `;
+}
+
 
 app.post('/getTicket', async (req: Request<{}, {}, TicketRequestBody>, res: Response): Promise<void> => {
     try {
@@ -70,7 +86,9 @@ app.post('/getTicket', async (req: Request<{}, {}, TicketRequestBody>, res: Resp
         const result = await makeAuthorizedApiCall(data);
 
 
-        res.redirect(`/generate-qr/${result.id}`);
+        const qrCodeHTML : string = await generateQRCodeHTML(result.id);
+
+        res.send(qrCodeHTML);
     } catch (error) {
         console.error("Error in getTicket route:", error);
         res.status(500).send('Failed to make authorized API call. ' + error);
@@ -84,9 +102,6 @@ app.get('/ticketDetails/:ticketId',requiresAuth(), async (req: Request<{ ticketI
 
     try {
         const ticket = await Ticket.findOne({ where: { id: ticketId } });
-
-
-
 
         // @ts-ignore
         const createdAtFormatted = ticket.createdAt.toLocaleString('en-GB', {
@@ -123,30 +138,6 @@ app.get('/ticketDetails/:ticketId',requiresAuth(), async (req: Request<{ ticketI
     }
 });
 
-app.get('/generate-qr/:ticketId', async (req, res) => {
-    const { ticketId } = req.params;
-
-    const url = `https://auth-3-t6fw.onrender.com/ticketDetails/${ticketId}`;
-
-    try {
-
-        const qrCodeImageUrl = await QRCode.toDataURL(url);
-
-        res.send(`
-            <html>
-                <body>
-                    <h1>QR code of your ticket</h1>
-                    <img src="${qrCodeImageUrl}" alt="QR Code"/>
-                    <p>Scan the QR code to access your ticket information.</p>
-                    <a href="/">Home</a>
-                </body>
-            </html>
-        `);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send('Failed to generate QR code.');
-    }
-});
 
 app.post('/secureTicket', async (req, res) => {
 
