@@ -54,8 +54,9 @@ app.post('/getTicket', async (req: Request<{}, {}, TicketRequestBody>, res: Resp
             return;
         }
         const result = await makeAuthorizedApiCall(data);
-        const qrCodeHTML : QRCodeHTMLResponse = await generateQRCodeHTML(result.id);
-        res.send(qrCodeHTML);
+        const qrCodeImageUrl = await generateQRCodeHTML(result.id);
+
+        res.render('qrcode', { qrCodeImageUrl });
     } catch (error) {
         console.error("Error in getTicket route:", error);
         res.status(500).send('Failed to make authorized API call. ' + error);
