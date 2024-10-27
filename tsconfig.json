@@ -2,7 +2,7 @@
   "compilerOptions": {
     "esModuleInterop": true,
     "outDir": "./main/dist",
-    "rootDir": "./frontend/src",
+    "rootDir": "./main/src",
     "declaration": true,
     "strictNullChecks": true,
     "noImplicitAny": true,
