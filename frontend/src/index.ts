@@ -83,7 +83,7 @@ app.get('/ticketDetails/:ticketId', requiresAuth(), async (req: Request<{ ticket
                 hour12: false
             });
 
-            res.render('ticketDetails', {
+            res.render('ticketInfo', {
                 userName: req.oidc.user?.name || 'Unknown User',
                 firstName: ticket.firstName || 'Unknown User',
                 lastName: ticket.lastName || 'Unknown User',
