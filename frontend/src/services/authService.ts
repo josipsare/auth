@@ -1,4 +1,4 @@
-// authService.ts
+
 import axios from 'axios';
 import {config} from "dotenv";
 

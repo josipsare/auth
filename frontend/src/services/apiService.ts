@@ -1,10 +1,10 @@
-// apiService.ts
+
 import axios from 'axios';
 import { getAuthToken } from './authService';
 
 export async function makeAuthorizedApiCall(data: any): Promise<any> {
     try {
-        const token = await getAuthToken();
+        const token: string = await getAuthToken();
 
         const response = await axios({
             method: 'POST',

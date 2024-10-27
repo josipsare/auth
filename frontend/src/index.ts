@@ -2,12 +2,13 @@
 //https://auth-3-t6fw.onrender.com
 import express, { Request, Response } from 'express';
 import path from 'path';
-import QRCode from 'qrcode';
-import Ticket from "./models/Ticket"; // Import your models
+import Ticket from "./models/Ticket";
 import {config} from "dotenv";
 import {makeAuthorizedApiCall} from "./services/apiService";
-import {getAuthToken} from "./services/authService";
 import { auth, requiresAuth, ConfigParams } from 'express-openid-connect';
+import { generateQRCodeHTML, QRCodeHTMLResponse } from "./services/qrcodeService"
+import {TicketRequestBody} from "./types/TicketRequestBody"
+import {SecureTicketRequestBody} from "./types/SecureTicketRequestBody";
 
 const app = express();
 config()
@@ -40,54 +41,20 @@ app.get('/', async (req:Request, res:Response) => {
     res.render('index', { numOfTickets });
 });
 
-interface TicketRequestBody {
-    vatin: string;
-    firstName: string;
-    lastName: string;
-}
-
-
-async function generateQRCodeHTML(ticketId: string): Promise<string> {
-    const ticketDetailsUrl = `https://auth-3-t6fw.onrender.com/ticketDetails/${ticketId}`;
-    const qrCodeImageUrl = await QRCode.toDataURL(ticketDetailsUrl);
-
-    return `
-        <html>
-            <body>
-                <h1>QR code of your ticket</h1>
-                <img src="${qrCodeImageUrl}" alt="QR Code"/>
-                <p>Scan the QR code to access your ticket information.</p>
-                <a href="/">Home</a>
-            </body>
-        </html>
-    `;
-}
-
-
 app.post('/getTicket', async (req: Request<{}, {}, TicketRequestBody>, res: Response): Promise<void> => {
     try {
         const data = req.body;
-
-
         if (!data.vatin || !data.firstName || !data.lastName) {
             res.status(400).send('Missing required fields');
             return
         }
-
-        const tickets: Ticket[] = await Ticket.findAll({ where: { vatin: data.vatin } });
-
-
-        if (tickets.length >= 3) {
+        const ticketCount: number = await Ticket.count({ where: { vatin: data.vatin } });
+        if (ticketCount >= 3) {
             res.status(400).send("More than 3 tickets were generated under this VATIN.");
-            return
+            return;
         }
-
-
         const result = await makeAuthorizedApiCall(data);
-
-
-        const qrCodeHTML : string = await generateQRCodeHTML(result.id);
-
+        const qrCodeHTML : QRCodeHTMLResponse = await generateQRCodeHTML(result.id);
         res.send(qrCodeHTML);
     } catch (error) {
         console.error("Error in getTicket route:", error);
@@ -97,38 +64,31 @@ app.post('/getTicket', async (req: Request<{}, {}, TicketRequestBody>, res: Resp
 });
 
 
-app.get('/ticketDetails/:ticketId',requiresAuth(), async (req: Request<{ ticketId: string }>, res: Response) => {
+app.get('/ticketDetails/:ticketId', requiresAuth(), async (req: Request<{ ticketId: string }>, res: Response) => {
     const ticketId = req.params.ticketId;
 
     try {
         const ticket = await Ticket.findOne({ where: { id: ticketId } });
-
-        // @ts-ignore
-        const createdAtFormatted = ticket.createdAt.toLocaleString('en-GB', {
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
-            year: 'numeric',
-            month: '2-digit',
-            day: '2-digit',
-            timeZoneName: 'short',
-            hour12: false
-        });
-
         if (ticket) {
-            res.send(`
-            <html lang="html5">
-                <body>
-                    <h1>Dobrodošli korisniče: ${req.oidc.user?.name}</h1>
-                    <h1>Details of your ticket</h1>
-                    <p>Ticket is registered under:</p>
-                    <p>First Name: ${ticket ? ticket.firstName : 'Unknown User'}</p>
-                    <p>Last Name: ${ticket ? ticket.lastName : 'Unknown User'}</p>
-                    <p>Vatin: ${ticket ? ticket.vatin : 'Unknown User'}</p>
-                    <p>Ticket was generated at ${createdAtFormatted}</p>
-                </body>
-            </html>
-        `);
+            const createdAtFormatted = ticket.createdAt.toLocaleString('en-GB', {
+                timeZone: 'CET',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                timeZoneName: 'short',
+                hour12: false
+            });
+
+            res.render('ticketDetails', {
+                userName: req.oidc.user?.name || 'Unknown User',
+                firstName: ticket.firstName || 'Unknown User',
+                lastName: ticket.lastName || 'Unknown User',
+                vatin: ticket.vatin || 'Unknown User',
+                createdAtFormatted
+            });
         } else {
             res.status(404).send('Ticket not found');
         }
@@ -138,31 +98,21 @@ app.get('/ticketDetails/:ticketId',requiresAuth(), async (req: Request<{ ticketI
     }
 });
 
-
-app.post('/secureTicket', async (req, res) => {
-
-    const newTicket = await Ticket.create({
-        vatin: req.body.vatin,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        createdAt: new Date(),
-        updatedAt: new Date()
-    });
-
-    res.json(newTicket);
-});
-
-app.get('/getToken', async (req, res) => {
+app.post('/secureTicket', async (req: Request<{}, {}, SecureTicketRequestBody>, res: Response) => {
     try {
-        const token = await getAuthToken();
-        console.log(token);
-        res.sendStatus(200)
-    } catch (err) {
-        console.log(err);
-        res.sendStatus(500);
+        const newTicket = await Ticket.create({
+            vatin: req.body.vatin,
+            firstName: req.body.firstName,
+            lastName: req.body.lastName,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+        res.json(newTicket);
+    } catch (error) {
+        console.error("Error in secureTicket route:", error);
+        res.status(500).send('Failed to create ticket');
     }
 });
-
 
 const hostname = '0.0.0.0';
 const port = process.env.PORT;
