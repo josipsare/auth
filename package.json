@@ -6,9 +6,9 @@
   "license": "ISC",
   "scripts": {
     "build": "npm run clean && tsc && npm run copy-files",
-    "clean": "shx rm -rf frontend/dist",
-    "copy-files": "shx cp -r frontend/src/views frontend/dist",
-    "start": "npm run build && nodemon frontend/dist/index.js"
+    "clean": "shx rm -rf main/dist",
+    "copy-files": "shx cp -r main/src/views main/dist",
+    "start": "npm run build && nodemon main/dist/index.js"
   },
   "dependencies": {
     "@types/sequelize": "^4.28.20",
